@@ -2,8 +2,8 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Note Condivise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Note Multi-Riga</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -16,31 +16,34 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             margin: 0;
-            padding: 20px;
-            padding-bottom: 80px;
+            padding: 15px;
+            padding-bottom: 100px; /* Spazio extra in fondo */
         }
 
-        h1 { text-align: center; color: #333; font-size: 1.5rem; }
+        h1 { text-align: center; color: #333; font-size: 1.4rem; margin-bottom: 20px;}
 
         #notes-container {
             display: grid;
-            gap: 15px;
+            gap: 20px;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
 
         .note-card {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
         }
 
+        /* HEADER DELLA NOTA */
         .note-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
-            min-height: 30px; /* Altezza minima se non c'è bottone */
+            padding-bottom: 5px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         .note-title {
@@ -48,143 +51,134 @@
             font-size: 1.1rem;
             width: 80%;
             padding: 5px;
+            background: transparent;
         }
         
-        /* Stile input vs testo normale */
-        input.note-title { border: none; border-bottom: 2px solid #ddd; outline: none; }
-        input.note-title:focus { border-bottom-color: var(--primary); }
-        span.note-title { border-bottom: none; }
+        input.note-title { border: none; outline: none; color: #333; }
+        input.note-title:focus { background: #feffde; }
 
-        .btn-delete {
-            background: none;
+        .btn-delete-note {
+            background: #fee2e2;
             border: none;
-            color: #999;
-            font-size: 1.5rem;
+            color: var(--danger);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 1.2rem;
             cursor: pointer;
-            padding: 0 10px;
-        }
-        .btn-delete:hover { color: var(--danger); }
-
-        .note-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
         }
 
-        .note-table th {
-            text-align: left;
-            font-size: 0.8rem;
-            color: #666;
-            padding-bottom: 5px;
-        }
-        .note-table td { vertical-align: middle; padding: 5px 2px; }
+        /* TABELLA E RIGHE */
+        .note-table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+        .note-table th { font-size: 0.75rem; color: #666; text-align: left; padding: 0 5px; }
+        .note-table td { vertical-align: middle; }
 
+        /* Input nome prodotto */
         .input-name {
             width: 100%;
             padding: 8px;
             font-size: 1rem;
             box-sizing: border-box;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background: #fafafa;
         }
-        input.input-name { border: 1px solid #ddd; border-radius: 6px; }
-        span.input-name { padding-left: 0; }
-
+        input.input-name:focus { background: #fff; border-color: var(--primary); outline: none; }
+        
+        /* Checkbox custom */
         .check-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
             background-color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: white;
-            transition: all 0.2s;
+            transition: all 0.1s;
         }
-        /* Cursore: mano se admin, freccia se utente */
-        .check-box.editable { cursor: pointer; }
-        .check-box.readonly { opacity: 0.7; border-color: #eee; }
-
         .check-box.checked { background-color: #10b981; border-color: #10b981; }
         .check-box.next-box.checked { background-color: var(--primary); border-color: var(--primary); }
+        .check-box.editable { cursor: pointer; }
+        .check-box.readonly { opacity: 0.6; }
 
-        .fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--primary);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
-            cursor: pointer;
-            border: none;
-            display: none; /* Nascosto di default */
+        /* Bottone elimina riga */
+        .btn-del-row {
+            background: none; border: none; color: #ccc; font-size: 1.2rem; cursor: pointer; padding: 0 5px;
         }
+        .btn-del-row:hover { color: var(--danger); }
 
-        /* LOGIN BAR */
-        #login-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #333;
-            color: white;
-            padding: 10px;
+        /* Footer della card (Aggiungi riga) */
+        .card-footer {
+            margin-top: 10px;
             text-align: center;
-            font-size: 0.8rem;
-            display: none; /* Gestito da JS */
+            border-top: 1px dashed #eee;
+            padding-top: 10px;
         }
-        #login-form {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            border-radius: 10px;
-            z-index: 1000;
-            flex-direction: column;
-            gap: 10px;
+        .btn-add-row {
+            background-color: #eff6ff;
+            color: var(--primary);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
-        #overlay {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
+
+        /* Bottone Flottante Nuova Nota */
+        .fab {
+            position: fixed; bottom: 20px; right: 20px;
+            background-color: var(--primary); color: white;
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            cursor: pointer; border: none; z-index: 100;
+            display: none; /* Nascosto se non admin */
         }
+
+        /* Login System */
+        #login-trigger {
+            position: fixed; bottom: 10px; left: 10px;
+            font-size: 0.8rem; color: #999; text-decoration: underline;
+            cursor: pointer; z-index: 50;
+        }
+        #login-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 20px; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 10px; width: 80%; max-width: 300px;
+        }
+        .login-box input { padding: 10px; font-size: 1rem; border: 1px solid #ddd; border-radius: 5px; }
+        .login-box button { padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; font-size: 1rem; }
 
     </style>
 </head>
 <body>
 
-    <h1>Note Condivise <span id="status-text" style="font-size: 0.8rem; font-weight: normal; color: #666;">(Sola Lettura)</span></h1>
+    <h1>Lista Spesa & Note <span id="mode-label" style="font-size:0.8rem; font-weight:normal; color:#888"></span></h1>
 
     <div id="notes-container">
-        <p style="text-align:center; width:100%; color:#888;">Caricamento note...</p>
+        <p style="text-align:center; color:#999; margin-top:50px;">Caricamento...</p>
     </div>
 
-    <button id="btn-add" class="fab" onclick="createNewNote()">+</button>
+    <button id="fab-add" class="fab" onclick="createNewNote()">+</button>
 
-    <div style="text-align: center; margin-top: 40px; color: #999; font-size: 0.8rem;">
-        <span id="login-link" style="cursor: pointer; text-decoration: underline;" onclick="showLogin()">Admin Login</span>
-        <span id="logout-link" style="cursor: pointer; text-decoration: underline; display:none;" onclick="doLogout()">Esci (Logout)</span>
-    </div>
+    <div id="login-trigger" onclick="toggleLogin()">Admin Login</div>
 
-    <div id="overlay" onclick="hideLogin()"></div>
-    <div id="login-form">
-        <h3>Accesso Admin</h3>
-        <input type="email" id="email" placeholder="Email (es. admin@...)" style="padding: 8px;">
-        <input type="password" id="password" placeholder="Password" style="padding: 8px;">
-        <button onclick="doLogin()" style="padding: 8px; background: var(--primary); color: white; border: none; cursor: pointer;">Accedi</button>
+    <div id="login-modal" onclick="if(event.target === this) toggleLogin()">
+        <div class="login-box">
+            <h3 style="margin:0; text-align:center;">Area Admin</h3>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="doLogin()">Entra</button>
+            <button onclick="doLogout()" style="background:#666; margin-top:5px;">Esci / Logout</button>
+        </div>
     </div>
 
     <script type="module">
@@ -192,7 +186,9 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // --- INCOLLA LA TUA CONFIG QUI SOTTO ---
+        // -----------------------------------------------------------
+        // INCOLLA QUI LA TUA CONFIGURAZIONE FIREBASE
+        // -----------------------------------------------------------
        const firebaseConfig = {
              apiKey: "AIzaSyCotP9ye0eFqYw0E3BUp4289rHqlruAs_Q",
              authDomain: "notes-7edc0.firebaseapp.com",
@@ -200,98 +196,104 @@
              storageBucket: "notes-7edc0.firebasestorage.app",
              messagingSenderId: "197957947166",
              appId: "1:197957947166:web:aee3eb14defa277289030f"
-      };
-        // ---------------------------------------
+      };        
+        // -----------------------------------------------------------
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const notesRef = collection(db, "note_spesa");
 
-        let currentUser = null; // Tiene traccia se sei loggato
-        let currentSnapshot = null; // Tiene i dati attuali
+        let currentUser = null;
+        let activeElementId = null; // Per evitare refresh fastidiosi
 
-        // Gestione Login/Logout
-        window.showLogin = () => {
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('login-form').style.display = 'flex';
-        }
-        window.hideLogin = () => {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('login-form').style.display = 'none';
-        }
+        // --- GESTIONE LOGIN ---
+        window.toggleLogin = () => {
+            const modal = document.getElementById('login-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        };
 
         window.doLogin = async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                hideLogin();
-            } catch (error) {
-                alert("Errore: " + error.message);
-            }
-        }
+                await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+                window.toggleLogin();
+            } catch(e) { alert("Errore: " + e.message); }
+        };
+        window.doLogout = async () => { await signOut(auth); window.toggleLogin(); };
 
-        window.doLogout = async () => {
-            await signOut(auth);
-            location.reload(); // Ricarica per pulire
-        }
-
-        // Ascolta se l'utente cambia (login o logout)
+        // --- GESTIONE STATO UTENTE ---
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            updateUIState();
-            if(currentSnapshot) renderNotes(currentSnapshot); // Ridisegna se abbiamo già i dati
+            document.getElementById('fab-add').style.display = user ? 'flex' : 'none';
+            document.getElementById('mode-label').innerText = user ? "(Modifica)" : "(Solo Lettura)";
+            // Ricarichiamo la vista al cambio login, ma senza query al DB (usa cache snapshot)
+            if(lastSnapshot) renderNotes(lastSnapshot);
         });
 
-        function updateUIState() {
-            const btnAdd = document.getElementById('btn-add');
-            const loginLink = document.getElementById('login-link');
-            const logoutLink = document.getElementById('logout-link');
-            const statusText = document.getElementById('status-text');
-
-            if (currentUser) {
-                // SEI ADMIN
-                btnAdd.style.display = 'flex';
-                loginLink.style.display = 'none';
-                logoutLink.style.display = 'inline';
-                statusText.innerText = "(Modalità Modifica)";
-                statusText.style.color = "green";
-            } else {
-                // SEI VISITATORE
-                btnAdd.style.display = 'none';
-                loginLink.style.display = 'inline';
-                logoutLink.style.display = 'none';
-                statusText.innerText = "(Sola Lettura)";
-                statusText.style.color = "#666";
-            }
-        }
-
-        // Operazioni Database
+        // --- LOGICA DATABASE ---
+        
+        // 1. Crea Nuova Nota (Con array di righe vuoto)
         window.createNewNote = async () => {
             if(!currentUser) return;
-            try {
-                await addDoc(notesRef, {
-                    titolo: "", contenuto: "", pagato: false, prossima: false, creato_il: serverTimestamp()
-                });
-            } catch (e) { alert(e.message); }
+            await addDoc(notesRef, {
+                titolo: "",
+                righe: [ { nome: "", pagato: false, prossima: false } ], // Parte con 1 riga vuota
+                creato_il: serverTimestamp()
+            });
         };
 
+        // 2. Elimina Intera Nota
         window.deleteNote = async (id) => {
+            if(!currentUser || !confirm("Eliminare tutta la nota?")) return;
+            await deleteDoc(doc(db, "note_spesa", id));
+        };
+
+        // 3. Aggiungi Riga alla Nota
+        window.addRow = async (id, currentRows) => {
             if(!currentUser) return;
-            if(confirm("Eliminare?")) await deleteDoc(doc(db, "note_spesa", id));
+            const newRows = [...currentRows, { nome: "", pagato: false, prossima: false }];
+            await updateDoc(doc(db, "note_spesa", id), { righe: newRows });
         };
 
-        window.updateData = async (id, campo, valore) => {
-            if(!currentUser) return; // Blocca se non sei admin
-            const notaRef = doc(db, "note_spesa", id);
-            await updateDoc(notaRef, { [campo]: valore });
+        // 4. Elimina Singola Riga
+        window.deleteRow = async (id, rowIndex, currentRows) => {
+            if(!currentUser) return;
+            const newRows = currentRows.filter((_, index) => index !== rowIndex);
+            await updateDoc(doc(db, "note_spesa", id), { righe: newRows });
         };
 
-        // Lettura dati e Rendering
+        // 5. AGGIORNAMENTO DATI (Cuore del fix tastiera)
+        // Usiamo "onchange" per i testi: salva solo quando esci dal campo.
+        window.updateRowData = async (noteId, rowIndex, field, value, allRows) => {
+            if(!currentUser) return;
+            
+            // Copia profonda dell'array per modificarlo
+            const newRows = JSON.parse(JSON.stringify(allRows));
+            newRows[rowIndex][field] = value;
+            
+            await updateDoc(doc(db, "note_spesa", noteId), { righe: newRows });
+        };
+
+        window.updateTitle = async (noteId, value) => {
+            if(!currentUser) return;
+            await updateDoc(doc(db, "note_spesa", noteId), { titolo: value });
+        };
+
+
+        // --- RENDERING ---
+        let lastSnapshot = null;
         const q = query(notesRef, orderBy("creato_il", "desc"));
+
         onSnapshot(q, (snapshot) => {
-            currentSnapshot = snapshot;
+            lastSnapshot = snapshot;
+            
+            // Se c'è un elemento attivo (stai scrivendo), non ridisegnare tutto brutalmente
+            // Ma per sicurezza con "onchange" il problema è minimizzato.
+            if(document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") {
+                // Stiamo scrivendo, aspettiamo il prossimo ciclo o il blur per aggiornare visualmente
+                // Questo evita che la tastiera sparisca se qualcun altro aggiorna
+                return; 
+            }
             renderNotes(snapshot);
         });
 
@@ -299,60 +301,79 @@
             const container = document.getElementById("notes-container");
             container.innerHTML = "";
 
-            snapshot.forEach((docSnap) => {
+            snapshot.forEach(docSnap => {
                 const note = docSnap.data();
                 const id = docSnap.id;
-                const isAdmin = currentUser !== null; // True se loggato
+                const isAdmin = !!currentUser;
+                const rows = note.righe || [];
 
-                // HTML Dinamico: Input se admin, Testo se visitatore
-                
-                // TITOLO
-                const titleHtml = isAdmin 
-                    ? `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo || ''}" oninput="updateData('${id}', 'titolo', this.value)">`
-                    : `<span class="note-title">${note.titolo || 'Senza Titolo'}</span>`;
+                // Serializziamo le righe per passarle alle funzioni onclick (trucco per evitare problemi con array)
+                const rowsString = JSON.stringify(rows).replace(/"/g, '&quot;');
 
-                // TASTO ELIMINA
-                const deleteHtml = isAdmin 
-                    ? `<button class="btn-delete" onclick="deleteNote('${id}')">&times;</button>`
-                    : ``;
+                // Costruiamo le righe della tabella
+                let rowsHtml = "";
+                rows.forEach((riga, index) => {
+                    rowsHtml += `
+                    <tr>
+                        <td style="width:50%">
+                            ${isAdmin ? 
+                                `<input type="text" class="input-name" value="${riga.nome}" 
+                                  onchange="updateRowData('${id}', ${index}, 'nome', this.value, ${rowsString})">` 
+                                : `<span style="padding-left:5px;">${riga.nome || '-'}</span>`
+                            }
+                        </td>
+                        <td style="width:20%">
+                            <div class="check-box ${riga.pagato ? 'checked' : ''} ${isAdmin?'editable':'readonly'}"
+                                 onclick="${isAdmin ? `updateRowData('${id}', ${index}, 'pagato', ${!riga.pagato}, ${rowsString})` : ''}">
+                                ${riga.pagato ? '✔' : ''}
+                            </div>
+                        </td>
+                        <td style="width:20%">
+                            <div class="check-box next-box ${riga.prossima ? 'checked' : ''} ${isAdmin?'editable':'readonly'}"
+                                 onclick="${isAdmin ? `updateRowData('${id}', ${index}, 'prossima', ${!riga.prossima}, ${rowsString})` : ''}">
+                                ${riga.prossima ? '✔' : ''}
+                            </div>
+                        </td>
+                        ${isAdmin ? `
+                        <td style="width:10%">
+                            <button class="btn-del-row" onclick="deleteRow('${id}', ${index}, ${rowsString})">×</button>
+                        </td>` : ''}
+                    </tr>`;
+                });
 
-                // CONTENUTO (NOME)
-                const contentHtml = isAdmin
-                    ? `<input type="text" class="input-name" placeholder="Dettaglio..." value="${note.contenuto || ''}" oninput="updateData('${id}', 'contenuto', this.value)">`
-                    : `<span class="input-name">${note.contenuto || '-'}</span>`;
+                // HTML COMPLETO DELLA CARD
+                const cardHtml = `
+                    <div class="note-card">
+                        <div class="note-header">
+                            ${isAdmin ? 
+                                `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo}" onchange="updateTitle('${id}', this.value)">` 
+                                : `<span class="note-title">${note.titolo || 'Senza Titolo'}</span>`
+                            }
+                            ${isAdmin ? `<button class="btn-delete-note" onclick="deleteNote('${id}')">🗑</button>` : ''}
+                        </div>
 
-                // CHECKBOX (Cliccabili solo se admin)
-                const makeCheck = (field, val, extraClass="") => `
-                    <div class="check-box ${extraClass} ${val ? 'checked' : ''} ${isAdmin ? 'editable' : 'readonly'}" 
-                         onclick="${isAdmin ? `updateData('${id}', '${field}', ${!val})` : ''}">
-                         ${val ? '✔' : ''}
-                    </div>`;
+                        <table class="note-table">
+                            <thead>
+                                <tr>
+                                    <th>Oggetto</th>
+                                    <th style="text-align:center">Pagato</th>
+                                    <th style="text-align:center">Prossima</th>
+                                    ${isAdmin ? '<th></th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
 
-                const noteElement = document.createElement("div");
-                noteElement.className = "note-card";
-                noteElement.innerHTML = `
-                    <div class="note-header">
-                        ${titleHtml}
-                        ${deleteHtml}
+                        ${isAdmin ? `
+                        <div class="card-footer">
+                            <button class="btn-add-row" onclick="addRow('${id}', ${rowsString})">+ Aggiungi Riga</button>
+                        </div>` : ''}
                     </div>
-                    <table class="note-table">
-                        <thead>
-                            <tr>
-                                <th style="width:50%">Nome</th>
-                                <th style="width:25%; text-align:center">Pagato</th>
-                                <th style="width:25%; text-align:center">Prossima</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>${contentHtml}</td>
-                                <td>${makeCheck('pagato', note.pagato)}</td>
-                                <td>${makeCheck('prossima', note.prossima, 'next-box')}</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 `;
-                container.appendChild(noteElement);
+
+                container.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
     </script>
