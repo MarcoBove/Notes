@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note Condivise</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --danger: #dc2626;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        h1 { text-align: center; color: #333; font-size: 1.5rem; }
+
+        #notes-container {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .note-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            min-height: 30px; /* Altezza minima se non c'è bottone */
+        }
+
+        .note-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 80%;
+            padding: 5px;
+        }
+        
+        /* Stile input vs testo normale */
+        input.note-title { border: none; border-bottom: 2px solid #ddd; outline: none; }
+        input.note-title:focus { border-bottom-color: var(--primary); }
+        span.note-title { border-bottom: none; }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+        .btn-delete:hover { color: var(--danger); }
+
+        .note-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .note-table th {
+            text-align: left;
+            font-size: 0.8rem;
+            color: #666;
+            padding-bottom: 5px;
+        }
+        .note-table td { vertical-align: middle; padding: 5px 2px; }
+
+        .input-name {
+            width: 100%;
+            padding: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input.input-name { border: 1px solid #ddd; border-radius: 6px; }
+        span.input-name { padding-left: 0; }
+
+        .check-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 1.5rem;
+            color: white;
+            transition: all 0.2s;
+        }
+        /* Cursore: mano se admin, freccia se utente */
+        .check-box.editable { cursor: pointer; }
+        .check-box.readonly { opacity: 0.7; border-color: #eee; }
+
+        .check-box.checked { background-color: #10b981; border-color: #10b981; }
+        .check-box.next-box.checked { background-color: var(--primary); border-color: var(--primary); }
+
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            border: none;
+            display: none; /* Nascosto di default */
+        }
+
+        /* LOGIN BAR */
+        #login-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+            display: none; /* Gestito da JS */
+        }
+        #login-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Note Condivise <span id="status-text" style="font-size: 0.8rem; font-weight: normal; color: #666;">(Sola Lettura)</span></h1>
+
+    <div id="notes-container">
+        <p style="text-align:center; width:100%; color:#888;">Caricamento note...</p>
+    </div>
+
+    <button id="btn-add" class="fab" onclick="createNewNote()">+</button>
+
+    <div style="text-align: center; margin-top: 40px; color: #999; font-size: 0.8rem;">
+        <span id="login-link" style="cursor: pointer; text-decoration: underline;" onclick="showLogin()">Admin Login</span>
+        <span id="logout-link" style="cursor: pointer; text-decoration: underline; display:none;" onclick="doLogout()">Esci (Logout)</span>
+    </div>
+
+    <div id="overlay" onclick="hideLogin()"></div>
+    <div id="login-form">
+        <h3>Accesso Admin</h3>
+        <input type="email" id="email" placeholder="Email (es. admin@...)" style="padding: 8px;">
+        <input type="password" id="password" placeholder="Password" style="padding: 8px;">
+        <button onclick="doLogin()" style="padding: 8px; background: var(--primary); color: white; border: none; cursor: pointer;">Accedi</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        // --- INCOLLA LA TUA CONFIG QUI SOTTO ---
+       const firebaseConfig = {
+             apiKey: "AIzaSyCotP9ye0eFqYw0E3BUp4289rHqlruAs_Q",
+             authDomain: "notes-7edc0.firebaseapp.com",
+             projectId: "notes-7edc0",
+             storageBucket: "notes-7edc0.firebasestorage.app",
+             messagingSenderId: "197957947166",
+             appId: "1:197957947166:web:aee3eb14defa277289030f"
+      };
+        // ---------------------------------------
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const notesRef = collection(db, "note_spesa");
+
+        let currentUser = null; // Tiene traccia se sei loggato
+        let currentSnapshot = null; // Tiene i dati attuali
+
+        // Gestione Login/Logout
+        window.showLogin = () => {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('login-form').style.display = 'flex';
+        }
+        window.hideLogin = () => {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('login-form').style.display = 'none';
+        }
+
+        window.doLogin = async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                hideLogin();
+            } catch (error) {
+                alert("Errore: " + error.message);
+            }
+        }
+
+        window.doLogout = async () => {
+            await signOut(auth);
+            location.reload(); // Ricarica per pulire
+        }
+
+        // Ascolta se l'utente cambia (login o logout)
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            updateUIState();
+            if(currentSnapshot) renderNotes(currentSnapshot); // Ridisegna se abbiamo già i dati
+        });
+
+        function updateUIState() {
+            const btnAdd = document.getElementById('btn-add');
+            const loginLink = document.getElementById('login-link');
+            const logoutLink = document.getElementById('logout-link');
+            const statusText = document.getElementById('status-text');
+
+            if (currentUser) {
+                // SEI ADMIN
+                btnAdd.style.display = 'flex';
+                loginLink.style.display = 'none';
+                logoutLink.style.display = 'inline';
+                statusText.innerText = "(Modalità Modifica)";
+                statusText.style.color = "green";
+            } else {
+                // SEI VISITATORE
+                btnAdd.style.display = 'none';
+                loginLink.style.display = 'inline';
+                logoutLink.style.display = 'none';
+                statusText.innerText = "(Sola Lettura)";
+                statusText.style.color = "#666";
+            }
+        }
+
+        // Operazioni Database
+        window.createNewNote = async () => {
+            if(!currentUser) return;
+            try {
+                await addDoc(notesRef, {
+                    titolo: "", contenuto: "", pagato: false, prossima: false, creato_il: serverTimestamp()
+                });
+            } catch (e) { alert(e.message); }
+        };
+
+        window.deleteNote = async (id) => {
+            if(!currentUser) return;
+            if(confirm("Eliminare?")) await deleteDoc(doc(db, "note_spesa", id));
+        };
+
+        window.updateData = async (id, campo, valore) => {
+            if(!currentUser) return; // Blocca se non sei admin
+            const notaRef = doc(db, "note_spesa", id);
+            await updateDoc(notaRef, { [campo]: valore });
+        };
+
+        // Lettura dati e Rendering
+        const q = query(notesRef, orderBy("creato_il", "desc"));
+        onSnapshot(q, (snapshot) => {
+            currentSnapshot = snapshot;
+            renderNotes(snapshot);
+        });
+
+        function renderNotes(snapshot) {
+            const container = document.getElementById("notes-container");
+            container.innerHTML = "";
+
+            snapshot.forEach((docSnap) => {
+                const note = docSnap.data();
+                const id = docSnap.id;
+                const isAdmin = currentUser !== null; // True se loggato
+
+                // HTML Dinamico: Input se admin, Testo se visitatore
+                
+                // TITOLO
+                const titleHtml = isAdmin 
+                    ? `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo || ''}" oninput="updateData('${id}', 'titolo', this.value)">`
+                    : `<span class="note-title">${note.titolo || 'Senza Titolo'}</span>`;
+
+                // TASTO ELIMINA
+                const deleteHtml = isAdmin 
+                    ? `<button class="btn-delete" onclick="deleteNote('${id}')">&times;</button>`
+                    : ``;
+
+                // CONTENUTO (NOME)
+                const contentHtml = isAdmin
+                    ? `<input type="text" class="input-name" placeholder="Dettaglio..." value="${note.contenuto || ''}" oninput="updateData('${id}', 'contenuto', this.value)">`
+                    : `<span class="input-name">${note.contenuto || '-'}</span>`;
+
+                // CHECKBOX (Cliccabili solo se admin)
+                const makeCheck = (field, val, extraClass="") => `
+                    <div class="check-box ${extraClass} ${val ? 'checked' : ''} ${isAdmin ? 'editable' : 'readonly'}" 
+                         onclick="${isAdmin ? `updateData('${id}', '${field}', ${!val})` : ''}">
+                         ${val ? '✔' : ''}
+                    </div>`;
+
+                const noteElement = document.createElement("div");
+                noteElement.className = "note-card";
+                noteElement.innerHTML = `
+                    <div class="note-header">
+                        ${titleHtml}
+                        ${deleteHtml}
+                    </div>
+                    <table class="note-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50%">Nome</th>
+                                <th style="width:25%; text-align:center">Pagato</th>
+                                <th style="width:25%; text-align:center">Prossima</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${contentHtml}</td>
+                                <td>${makeCheck('pagato', note.pagato)}</td>
+                                <td>${makeCheck('prossima', note.prossima, 'next-box')}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                container.appendChild(noteElement);
+            });
+        }
+    </script>
+</body>
+</html>
