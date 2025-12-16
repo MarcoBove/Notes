@@ -18,7 +18,7 @@
             background-color: var(--bg);
             margin: 0;
             padding: 15px;
-            padding-bottom: 100px; /* Spazio extra in fondo */
+            padding-bottom: 100px;
         }
 
         h1 { text-align: center; color: #333; font-size: 1.4rem; margin-bottom: 20px;}
@@ -36,11 +36,13 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-        /* Evidenzia la Classifica Marcatori con un bordo diverso */
+        
+        /* Evidenzia la Classifica Marcatori */
         .note-card.special-card {
             border: 2px solid var(--primary);
             background-color: #f0f7ff;
         }
+
         /* HEADER DELLA NOTA */
         .note-header {
             display: flex;
@@ -77,7 +79,7 @@
         .note-table th { font-size: 0.75rem; color: #666; text-align: left; padding: 0 5px; }
         .note-table td { vertical-align: middle; }
 
-        /* Input nome prodotto */
+        /* Input nome */
         .input-name {
             width: 100%;
             padding: 8px;
@@ -91,24 +93,16 @@
         
         /* Checkbox custom */
         .check-box {
-            width: 35px;
-            height: 35px;
-            border-radius: 6px;
-            border: 2px solid #e5e7eb;
-            background-color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            font-size: 1.2rem;
-            color: white;
-            transition: all 0.1s;
+            width: 35px; height: 35px; border-radius: 6px; border: 2px solid #e5e7eb;
+            background-color: #fff; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto; font-size: 1.2rem; color: white; transition: all 0.1s;
         }
         .check-box.checked { background-color: var(--success); border-color: var(--success); }
         .check-box.next-box.checked { background-color: var(--primary); border-color: var(--primary); }
         .check-box.editable { cursor: pointer; }
         .check-box.readonly { opacity: 0.6; }
-         /* CONTROLLI GOAL */
+
+        /* CONTROLLI GOAL */
         .goal-wrapper {
             display: flex;
             align-items: center;
@@ -129,30 +123,23 @@
             font-size: 1.1rem; padding: 5px;
             border: 1px solid #ddd; border-radius: 5px;
         }
+
         /* Bottone elimina riga */
         .btn-del-row {
             background: none; border: none; color: #ccc; font-size: 1.2rem; cursor: pointer; padding: 0 5px;
         }
         .btn-del-row:hover { color: var(--danger); }
 
-        /* Footer della card (Aggiungi riga) */
+        /* Footer della card */
         .card-footer {
-            margin-top: 10px;
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 10px;
+            margin-top: 10px; text-align: center; border-top: 1px dashed #ccc; padding-top: 10px;
         }
         .btn-add-row {
-            background-color: #eff6ff;
-            color: var(--primary);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: #eff6ff; color: var(--primary); border: none;
+            padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer;
         }
 
-        /* Bottone Flottante Nuova Nota */
+        /* FAB */
         .fab {
             position: fixed; bottom: 20px; right: 20px;
             background-color: var(--primary); color: white;
@@ -160,10 +147,10 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 2.5rem; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
             cursor: pointer; border: none; z-index: 100;
-            display: none; /* Nascosto se non admin */
+            display: none; 
         }
 
-        /* Login System */
+        /* Login */
         #login-trigger {
             position: fixed; bottom: 10px; left: 10px;
             font-size: 0.8rem; color: #999; text-decoration: underline;
@@ -179,13 +166,13 @@
             display: flex; flex-direction: column; gap: 10px; width: 80%; max-width: 300px;
         }
         .login-box input { padding: 10px; font-size: 1rem; border: 1px solid #ddd; border-radius: 5px; }
-        .login-box button { padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; font-size: 1rem; }
+        .login-box button { padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; }
 
     </style>
 </head>
 <body>
 
-    <h1> Vecchie Glorie <span id="mode-label" style="font-size:0.8rem; font-weight:normal; color:#888"></span></h1>
+    <h1>Vecchie Glorie <span id="mode-label" style="font-size:0.8rem; font-weight:normal; color:#888"></span></h1>
 
     <div id="notes-container">
         <p style="text-align:center; color:#999; margin-top:50px;">Caricamento...</p>
@@ -201,7 +188,7 @@
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
             <button onclick="doLogin()">Entra</button>
-            <button onclick="doLogout()" style="background:#666; margin-top:5px;">Esci / Logout</button>
+            <button onclick="doLogout()" style="background:#666; margin-top:5px;">Esci</button>
         </div>
     </div>
 
@@ -210,18 +197,15 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // -----------------------------------------------------------
-        // INCOLLA QUI LA TUA CONFIGURAZIONE FIREBASE
-        // -----------------------------------------------------------
-       const firebaseConfig = {
+        // CONFIGURAZIONE CORRETTA E PULITA
+        const firebaseConfig = {
              apiKey: "AIzaSyCotP9ye0eFqYw0E3BUp4289rHqlruAs_Q",
              authDomain: "notes-7edc0.firebaseapp.com",
              projectId: "notes-7edc0",
              storageBucket: "notes-7edc0.firebasestorage.app",
              messagingSenderId: "197957947166",
              appId: "1:197957947166:web:aee3eb14defa277289030f"
-      };        
-        // -----------------------------------------------------------
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -229,7 +213,7 @@
         const notesRef = collection(db, "note_spesa");
 
         let currentUser = null;
-        let activeElementId = null; // Per evitare refresh fastidiosi
+        let lastSnapshot = null;
 
         // --- GESTIONE LOGIN ---
         window.toggleLogin = () => {
@@ -245,17 +229,15 @@
         };
         window.doLogout = async () => { await signOut(auth); window.toggleLogin(); };
 
-        // --- GESTIONE STATO UTENTE ---
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             document.getElementById('fab-add').style.display = user ? 'flex' : 'none';
             document.getElementById('mode-label').innerText = user ? "(Modifica)" : "(Solo Lettura)";
-            // Ricarichiamo la vista al cambio login, ma senza query al DB (usa cache snapshot)
             if(lastSnapshot) renderNotes(lastSnapshot);
         });
 
         // --- LOGICA DATABASE ---
-window.createNewNote = async () => {
+        window.createNewNote = async () => {
             if(!currentUser) return;
             await addDoc(notesRef, {
                 titolo: "",
@@ -307,12 +289,20 @@ window.createNewNote = async () => {
             await updateDoc(doc(db, "note_spesa", noteId), { titolo: value });
         };
 
-        // --- RENDERING (MODIFICATO PER ORDINARE I GOAL) ---
+        // --- RENDERING ---
         const q = query(notesRef, orderBy("creato_il", "desc"));
 
         onSnapshot(q, (snapshot) => {
             lastSnapshot = snapshot;
-            if(document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") return;
+            
+            // CORREZIONE IMPORTANTE: 
+            // Se c'è scritto "Caricamento...", forziamo il rendering anche se l'utente sta scrivendo.
+            // Altrimenti rischia di bloccarsi al primo avvio.
+            const container = document.getElementById("notes-container");
+            const isLoading = container.innerText.includes("Caricamento");
+
+            if (!isLoading && document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") return;
+            
             renderNotes(snapshot);
         });
 
@@ -336,18 +326,15 @@ window.createNewNote = async () => {
                 const isAdmin = !!currentUser;
                 const rowsRaw = note.righe || [];
                 
-                // --- NOVITÀ: Creiamo una lista da visualizzare che tiene traccia dell'indice originale ---
-                // Mappiamo ogni riga aggiungendo "originalIndex". Questo serve perché se ordiniamo visivamente,
-                // i bottoni devono comunque puntare alla riga giusta nel database!
+                // Mappiamo per ordinamento
                 let displayRows = rowsRaw.map((r, i) => ({ ...r, originalIndex: i }));
 
-                // SE È LA CLASSIFICA, ORDINA PER GOAL (Decrescente)
                 if(isClassifica) {
                     displayRows.sort((a, b) => (b.goal || 0) - (a.goal || 0));
                 }
 
-                // Stringa JSON dell'intero array originale (serve per le funzioni di update)
-                const rowsString = JSON.stringify(rowsRaw).replace(/"/g, '&quot;');
+                // FIX: Sanificazione stringa per evitare errori se ci sono apostrofi nei nomi
+                const rowsString = JSON.stringify(rowsRaw).replace(/"/g, '&quot;').replace(/'/g, "\\'");
                 const noteTitleClean = (note.titolo || "").replace(/"/g, '&quot;');
 
                 let theadHtml = "";
@@ -368,19 +355,15 @@ window.createNewNote = async () => {
 
                 let rowsHtml = "";
                 
-                // Usiamo displayRows (quella eventualmente ordinata) per disegnare
                 displayRows.forEach((riga) => {
-                    // Recuperiamo l'indice vero per passarlo ai bottoni
                     const realIndex = riga.originalIndex; 
-                    
                     let colsHtml = "";
                     
                     if(isClassifica) {
-                        // LAYOUT CLASSIFICA
                         colsHtml = `
                         <td>
                             ${isAdmin ? 
-                                `<input type="text" class="input-name" value="${riga.nome}" 
+                                `<input type="text" class="input-name" value="${riga.nome || ''}" 
                                   onchange="updateRowData('${note.id}', ${realIndex}, 'nome', this.value, ${rowsString})">` 
                                 : `<span style="padding-left:5px; font-weight:bold;">${riga.nome || '-'}</span>`
                             }
@@ -400,11 +383,10 @@ window.createNewNote = async () => {
                         </td>
                         `;
                     } else {
-                        // LAYOUT STANDARD
                         colsHtml = `
                         <td>
                             ${isAdmin ? 
-                                `<input type="text" class="input-name" value="${riga.nome}" 
+                                `<input type="text" class="input-name" value="${riga.nome || ''}" 
                                   onchange="updateRowData('${note.id}', ${realIndex}, 'nome', this.value, ${rowsString})">` 
                                 : `<span style="padding-left:5px;">${riga.nome || '-'}</span>`
                             }
@@ -438,7 +420,7 @@ window.createNewNote = async () => {
                     <div class="note-card ${isClassifica ? 'special-card' : ''}">
                         <div class="note-header">
                             ${isAdmin ? 
-                                `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo}" onchange="updateTitle('${note.id}', this.value)">` 
+                                `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo || ''}" onchange="updateTitle('${note.id}', this.value)">` 
                                 : `<span class="note-title">${note.titolo || 'Senza Titolo'}</span>`
                             }
                             ${isAdmin ? `<button class="btn-delete-note" onclick="deleteNote('${note.id}')">🗑</button>` : ''}
@@ -461,7 +443,12 @@ window.createNewNote = async () => {
             docs.forEach(doc => {
                 container.insertAdjacentHTML('beforeend', drawCard(doc, false));
             });
+            
+            // Se non ci sono note, togliamo la scritta caricamento
+            if(!classificaDoc && docs.length === 0) {
+                 container.innerHTML = '<p style="text-align:center; color:#999; margin-top:50px;">Nessuna nota presente.</p>';
+            }
         }
-    </script>        
+    </script>
 </body>
 </html>
