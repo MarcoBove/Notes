@@ -8,7 +8,6 @@
         :root {
             --primary: #2563eb;
             --danger: #dc2626;
-            --success: #10b981;
             --bg: #f3f4f6;
             --card-bg: #ffffff;
         }
@@ -36,11 +35,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-        /* Evidenzia la Classifica Marcatori con un bordo diverso */
-        .note-card.special-card {
-            border: 2px solid var(--primary);
-            background-color: #f0f7ff;
-        }
+
         /* HEADER DELLA NOTA */
         .note-header {
             display: flex;
@@ -73,7 +68,7 @@
         }
 
         /* TABELLA E RIGHE */
-        .note-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .note-table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
         .note-table th { font-size: 0.75rem; color: #666; text-align: left; padding: 0 5px; }
         .note-table td { vertical-align: middle; }
 
@@ -83,7 +78,7 @@
             padding: 8px;
             font-size: 1rem;
             box-sizing: border-box;
-            border: 1px solid #ddd;
+            border: 1px solid #eee;
             border-radius: 6px;
             background: #fafafa;
         }
@@ -104,31 +99,11 @@
             color: white;
             transition: all 0.1s;
         }
-        .check-box.checked { background-color: var(--success); border-color: var(--success); }
+        .check-box.checked { background-color: #10b981; border-color: #10b981; }
         .check-box.next-box.checked { background-color: var(--primary); border-color: var(--primary); }
         .check-box.editable { cursor: pointer; }
         .check-box.readonly { opacity: 0.6; }
-         /* CONTROLLI GOAL */
-        .goal-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-        .btn-score {
-            width: 30px; height: 30px;
-            border-radius: 50%; border: none;
-            color: white; font-weight: bold; font-size: 1.2rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .btn-minus { background-color: #ef4444; }
-        .btn-plus { background-color: #3b82f6; }
-        
-        .input-score {
-            width: 40px; text-align: center;
-            font-size: 1.1rem; padding: 5px;
-            border: 1px solid #ddd; border-radius: 5px;
-        }
+
         /* Bottone elimina riga */
         .btn-del-row {
             background: none; border: none; color: #ccc; font-size: 1.2rem; cursor: pointer; padding: 0 5px;
@@ -139,7 +114,7 @@
         .card-footer {
             margin-top: 10px;
             text-align: center;
-            border-top: 1px dashed #ccc;
+            border-top: 1px dashed #eee;
             padding-top: 10px;
         }
         .btn-add-row {
@@ -149,6 +124,7 @@
             padding: 8px 15px;
             border-radius: 20px;
             font-weight: bold;
+            font-size: 0.9rem;
             cursor: pointer;
         }
 
@@ -255,50 +231,46 @@
         });
 
         // --- LOGICA DATABASE ---
-window.createNewNote = async () => {
+        
+        // 1. Crea Nuova Nota (Con array di righe vuoto)
+        window.createNewNote = async () => {
             if(!currentUser) return;
             await addDoc(notesRef, {
                 titolo: "",
-                righe: [ { nome: "", pagato: false, prossima: false } ], 
+                righe: [ { nome: "", pagato: false, prossima: false } ], // Parte con 1 riga vuota
                 creato_il: serverTimestamp()
             });
         };
 
+        // 2. Elimina Intera Nota
         window.deleteNote = async (id) => {
-            if(!currentUser || !confirm("Eliminare questa nota?")) return;
+            if(!currentUser || !confirm("Eliminare tutta la nota?")) return;
             await deleteDoc(doc(db, "note_spesa", id));
         };
 
-        window.addRow = async (id, currentRows, noteTitle) => {
+        // 3. Aggiungi Riga alla Nota
+        window.addRow = async (id, currentRows) => {
             if(!currentUser) return;
-            let newObj = {};
-            if(noteTitle === "Classifica marcatori") {
-                newObj = { nome: "", goal: 0 };
-            } else {
-                newObj = { nome: "", pagato: false, prossima: false };
-            }
-            const newRows = [...currentRows, newObj];
+            const newRows = [...currentRows, { nome: "", pagato: false, prossima: false }];
             await updateDoc(doc(db, "note_spesa", id), { righe: newRows });
         };
 
+        // 4. Elimina Singola Riga
         window.deleteRow = async (id, rowIndex, currentRows) => {
             if(!currentUser) return;
             const newRows = currentRows.filter((_, index) => index !== rowIndex);
             await updateDoc(doc(db, "note_spesa", id), { righe: newRows });
         };
 
+        // 5. AGGIORNAMENTO DATI (Cuore del fix tastiera)
+        // Usiamo "onchange" per i testi: salva solo quando esci dal campo.
         window.updateRowData = async (noteId, rowIndex, field, value, allRows) => {
             if(!currentUser) return;
-            const newRows = JSON.parse(JSON.stringify(allRows)); 
-            newRows[rowIndex][field] = value;
-            await updateDoc(doc(db, "note_spesa", noteId), { righe: newRows });
-        };
-
-        window.changeScore = async (noteId, rowIndex, delta, allRows) => {
-            if(!currentUser) return;
+            
+            // Copia profonda dell'array per modificarlo
             const newRows = JSON.parse(JSON.stringify(allRows));
-            let currentScore = parseInt(newRows[rowIndex].goal) || 0;
-            newRows[rowIndex].goal = currentScore + delta;
+            newRows[rowIndex][field] = value;
+            
             await updateDoc(doc(db, "note_spesa", noteId), { righe: newRows });
         };
 
@@ -307,12 +279,21 @@ window.createNewNote = async () => {
             await updateDoc(doc(db, "note_spesa", noteId), { titolo: value });
         };
 
-        // --- RENDERING (MODIFICATO PER ORDINARE I GOAL) ---
+
+        // --- RENDERING ---
+        let lastSnapshot = null;
         const q = query(notesRef, orderBy("creato_il", "desc"));
 
         onSnapshot(q, (snapshot) => {
             lastSnapshot = snapshot;
-            if(document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") return;
+            
+            // Se c'è un elemento attivo (stai scrivendo), non ridisegnare tutto brutalmente
+            // Ma per sicurezza con "onchange" il problema è minimizzato.
+            if(document.activeElement.tagName === "INPUT" && document.activeElement.type === "text") {
+                // Stiamo scrivendo, aspettiamo il prossimo ciclo o il blur per aggiornare visualmente
+                // Questo evita che la tastiera sparisca se qualcun altro aggiorna
+                return; 
+            }
             renderNotes(snapshot);
         });
 
@@ -320,148 +301,81 @@ window.createNewNote = async () => {
             const container = document.getElementById("notes-container");
             container.innerHTML = "";
 
-            let docs = [];
-            let classificaDoc = null;
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if(data.titolo && data.titolo.trim() === "Classifica marcatori") {
-                    classificaDoc = { id: doc.id, ...data };
-                } else {
-                    docs.push({ id: doc.id, ...data });
-                }
-            });
-
-            const drawCard = (note, isClassifica) => {
+            snapshot.forEach(docSnap => {
+                const note = docSnap.data();
+                const id = docSnap.id;
                 const isAdmin = !!currentUser;
-                const rowsRaw = note.righe || [];
-                
-                // --- NOVITÀ: Creiamo una lista da visualizzare che tiene traccia dell'indice originale ---
-                // Mappiamo ogni riga aggiungendo "originalIndex". Questo serve perché se ordiniamo visivamente,
-                // i bottoni devono comunque puntare alla riga giusta nel database!
-                let displayRows = rowsRaw.map((r, i) => ({ ...r, originalIndex: i }));
+                const rows = note.righe || [];
 
-                // SE È LA CLASSIFICA, ORDINA PER GOAL (Decrescente)
-                if(isClassifica) {
-                    displayRows.sort((a, b) => (b.goal || 0) - (a.goal || 0));
-                }
+                // Serializziamo le righe per passarle alle funzioni onclick (trucco per evitare problemi con array)
+                const rowsString = JSON.stringify(rows).replace(/"/g, '&quot;');
 
-                // Stringa JSON dell'intero array originale (serve per le funzioni di update)
-                const rowsString = JSON.stringify(rowsRaw).replace(/"/g, '&quot;');
-                const noteTitleClean = (note.titolo || "").replace(/"/g, '&quot;');
-
-                let theadHtml = "";
-                if(isClassifica) {
-                    theadHtml = `<tr>
-                        <th style="width:60%">Giocatore</th>
-                        <th style="width:40%; text-align:center">Goal</th>
-                        ${isAdmin ? '<th></th>' : ''}
-                    </tr>`;
-                } else {
-                    theadHtml = `<tr>
-                        <th style="width:50%">Oggetto</th>
-                        <th style="width:20%; text-align:center">Pagato</th>
-                        <th style="width:20%; text-align:center">Prossima</th>
-                        ${isAdmin ? '<th></th>' : ''}
-                    </tr>`;
-                }
-
+                // Costruiamo le righe della tabella
                 let rowsHtml = "";
-                
-                // Usiamo displayRows (quella eventualmente ordinata) per disegnare
-                displayRows.forEach((riga) => {
-                    // Recuperiamo l'indice vero per passarlo ai bottoni
-                    const realIndex = riga.originalIndex; 
-                    
-                    let colsHtml = "";
-                    
-                    if(isClassifica) {
-                        // LAYOUT CLASSIFICA
-                        colsHtml = `
-                        <td>
+                rows.forEach((riga, index) => {
+                    rowsHtml += `
+                    <tr>
+                        <td style="width:50%">
                             ${isAdmin ? 
                                 `<input type="text" class="input-name" value="${riga.nome}" 
-                                  onchange="updateRowData('${note.id}', ${realIndex}, 'nome', this.value, ${rowsString})">` 
-                                : `<span style="padding-left:5px; font-weight:bold;">${riga.nome || '-'}</span>`
-                            }
-                        </td>
-                        <td>
-                            <div class="goal-wrapper">
-                                ${isAdmin ? `<button class="btn-score btn-minus" onclick="changeScore('${note.id}', ${realIndex}, -1, ${rowsString})">-</button>` : ''}
-                                
-                                ${isAdmin ? 
-                                    `<input type="number" class="input-score" value="${riga.goal || 0}" 
-                                      onchange="updateRowData('${note.id}', ${realIndex}, 'goal', parseInt(this.value), ${rowsString})">`
-                                    : `<span style="font-size:1.2rem; font-weight:bold; color:#2563eb">${riga.goal || 0}</span>`
-                                }
-
-                                ${isAdmin ? `<button class="btn-score btn-plus" onclick="changeScore('${note.id}', ${realIndex}, 1, ${rowsString})">+</button>` : ''}
-                            </div>
-                        </td>
-                        `;
-                    } else {
-                        // LAYOUT STANDARD
-                        colsHtml = `
-                        <td>
-                            ${isAdmin ? 
-                                `<input type="text" class="input-name" value="${riga.nome}" 
-                                  onchange="updateRowData('${note.id}', ${realIndex}, 'nome', this.value, ${rowsString})">` 
+                                  onchange="updateRowData('${id}', ${index}, 'nome', this.value, ${rowsString})">` 
                                 : `<span style="padding-left:5px;">${riga.nome || '-'}</span>`
                             }
                         </td>
-                        <td align="center">
+                        <td style="width:20%">
                             <div class="check-box ${riga.pagato ? 'checked' : ''} ${isAdmin?'editable':'readonly'}"
-                                 onclick="${isAdmin ? `updateRowData('${note.id}', ${realIndex}, 'pagato', ${!riga.pagato}, ${rowsString})` : ''}">
+                                 onclick="${isAdmin ? `updateRowData('${id}', ${index}, 'pagato', ${!riga.pagato}, ${rowsString})` : ''}">
                                 ${riga.pagato ? '✔' : ''}
                             </div>
                         </td>
-                        <td align="center">
+                        <td style="width:20%">
                             <div class="check-box next-box ${riga.prossima ? 'checked' : ''} ${isAdmin?'editable':'readonly'}"
-                                 onclick="${isAdmin ? `updateRowData('${note.id}', ${realIndex}, 'prossima', ${!riga.prossima}, ${rowsString})` : ''}">
+                                 onclick="${isAdmin ? `updateRowData('${id}', ${index}, 'prossima', ${!riga.prossima}, ${rowsString})` : ''}">
                                 ${riga.prossima ? '✔' : ''}
                             </div>
                         </td>
-                        `;
-                    }
-
-                    rowsHtml += `
-                    <tr>
-                        ${colsHtml}
                         ${isAdmin ? `
-                        <td style="width:10%" align="center">
-                            <button class="btn-del-row" onclick="deleteRow('${note.id}', ${realIndex}, ${rowsString})">×</button>
+                        <td style="width:10%">
+                            <button class="btn-del-row" onclick="deleteRow('${id}', ${index}, ${rowsString})">×</button>
                         </td>` : ''}
                     </tr>`;
                 });
 
-                return `
-                    <div class="note-card ${isClassifica ? 'special-card' : ''}">
+                // HTML COMPLETO DELLA CARD
+                const cardHtml = `
+                    <div class="note-card">
                         <div class="note-header">
                             ${isAdmin ? 
-                                `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo}" onchange="updateTitle('${note.id}', this.value)">` 
+                                `<input type="text" class="note-title" placeholder="Titolo..." value="${note.titolo}" onchange="updateTitle('${id}', this.value)">` 
                                 : `<span class="note-title">${note.titolo || 'Senza Titolo'}</span>`
                             }
-                            ${isAdmin ? `<button class="btn-delete-note" onclick="deleteNote('${note.id}')">🗑</button>` : ''}
+                            ${isAdmin ? `<button class="btn-delete-note" onclick="deleteNote('${id}')">🗑</button>` : ''}
                         </div>
+
                         <table class="note-table">
-                            <thead>${theadHtml}</thead>
-                            <tbody>${rowsHtml}</tbody>
+                            <thead>
+                                <tr>
+                                    <th>Oggetto</th>
+                                    <th style="text-align:center">Pagato</th>
+                                    <th style="text-align:center">Prossima</th>
+                                    ${isAdmin ? '<th></th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
                         </table>
+
                         ${isAdmin ? `
                         <div class="card-footer">
-                            <button class="btn-add-row" onclick="addRow('${note.id}', ${rowsString}, '${noteTitleClean}')">+ Aggiungi Riga</button>
+                            <button class="btn-add-row" onclick="addRow('${id}', ${rowsString})">+ Aggiungi Riga</button>
                         </div>` : ''}
                     </div>
                 `;
-            };
 
-            if(classificaDoc) {
-                container.insertAdjacentHTML('beforeend', drawCard(classificaDoc, true));
-            }
-            docs.forEach(doc => {
-                container.insertAdjacentHTML('beforeend', drawCard(doc, false));
+                container.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
-    </script>        
+    </script>
 </body>
 </html>
